@@ -1,0 +1,11 @@
+basic
+- copies .platform to the root of the project
+- entrypoint.sh 
+- nginx.conf
+- supervisord.conf with nginx, php-fpm (optionally, scheduler)
+- .dockerignore
+- multistage Dockerfile
+- optionally log to stdout and stderr instead of files
+- use a non-root user to run the container
+- add a healthcheck
+- optionally add a deploy.sh script to pull the latest code and restart the container (to be ran on the host)
