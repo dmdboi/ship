@@ -9,7 +9,7 @@ use Dmdboi\Ship\Publishers\FilePublisher;
 use Illuminate\Filesystem\Filesystem;
 
 it('builds a worker-aware entrypoint', function () {
-    $entrypoint = new EntrypointBuilder(new DetectionResult, new ShipConfiguration)->build();
+    $entrypoint = (new EntrypointBuilder(new DetectionResult, new ShipConfiguration))->build();
 
     expect($entrypoint)
         ->toContain('CONTAINER_ROLE')
@@ -18,10 +18,10 @@ it('builds a worker-aware entrypoint', function () {
 });
 
 it('builds a non-root runtime with a working healthcheck', function () {
-    $dockerfile = new DockerfileBuilder(new ShipConfiguration(
+    $dockerfile = (new DockerfileBuilder(new ShipConfiguration(
         healthcheck: true,
         healthcheckEndpoint: '/up',
-    ))->build();
+    )))->build();
 
     expect($dockerfile)
         ->toContain('USER appuser')
@@ -31,7 +31,7 @@ it('builds a non-root runtime with a working healthcheck', function () {
         ->toContain('EXPOSE 8080')
         ->toContain('localhost:8080/up');
 
-    expect(new DockerfileBuilder(new ShipConfiguration(phpExtensions: ['redis', 'imagick']))->build())
+    expect((new DockerfileBuilder(new ShipConfiguration(phpExtensions: ['redis', 'imagick'])))->build())
         ->toContain('pecl install redis imagick')
         ->toContain('imagemagick-dev')
         ->toContain('imagemagick');
@@ -62,10 +62,10 @@ it('generates worker health checks for every configured worker process', functio
 });
 
 it('supports frontend projects without a lockfile', function () {
-    $dockerfile = new DockerfileBuilder(new ShipConfiguration(
+    $dockerfile = (new DockerfileBuilder(new ShipConfiguration(
         hasFrontend: true,
         frontendLockfile: null,
-    ))->build();
+    )))->build();
 
     expect($dockerfile)
         ->toContain('COPY package.json ./')
