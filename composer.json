@@ -1,29 +1,32 @@
 {
-    "name": "dmdboi/:package_slug",
-    "description": ":package_description",
+    "name": "dmdboi/ship",
+    "description": "Ship Laravel in a container - preset files for Docker deployments",
     "keywords": [
-        ":vendor_name",
+        "dmdboi",
         "laravel",
-        ":package_slug"
+        "ship",
+        "docker",
+        "container"
     ],
-    "homepage": "https://github.com/dmdboi/:package_slug",
+    "homepage": "https://github.com/dmdboi/ship",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
+            "name": "dmdboi",
             "email": "author@domain.com",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.4",
+        "php": "^8.2",
+        "laravel/prompts": "^0.3",
         "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0"
+        "illuminate/contracts": "^10.0||^11.0||^12.0||^13.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "nunomaduro/collision": "^8.8",
         "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.27",
+        "nunomaduro/collision": "^8.8",
         "orchestra/testbench": "^10.0.0||^9.0.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-arch": "^4.0",
@@ -35,13 +38,12 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "Dmdboi\\Ship\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "Dmdboi\\Ship\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,13 +65,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
-            ],
-            "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
-            }
+                "Dmdboi\\Ship\\ShipServiceProvider"
+            ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

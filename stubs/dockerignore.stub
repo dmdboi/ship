@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be built in stages)
+node_modules
+vendor
+
+# Build artifacts
+public/build
+public/hot
+
+# Development files
+.env
+.env.local
+.env.*.local
+.env.example
+
+# IDE and editor files
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Testing
+tests
+phpunit.xml
+.phpunit.result.cache
+.phpunit.cache
+coverage
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+README.md
+CHANGELOG.md
+docs
+
+# Docker (avoid recursive copy)
+Dockerfile
+deploy.sh
+
+# Laravel specific
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# Keep .gitkeep files
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!bootstrap/cache/.gitkeep
+
+# Static analysis and code quality
+.php-cs-fixer.cache
+phpstan.neon
+phpstan-baseline.neon
+
+# Misc
+*.log
+*.md
+!lang/**/*.md
+.DS_Store
+Thumbs.db

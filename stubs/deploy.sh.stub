@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ship deploys two containers from the same locally-built image. Override any
+# of these variables in the environment when the host uses different names.
+IMAGE="${SHIP_IMAGE:-{{IMAGE_NAME}}}"
+APP_NAME="${SHIP_APP_NAME:-{{APP_NAME}}}"
+ENV_FILE="${SHIP_ENV_FILE:-.env}"
+NETWORK="${SHIP_NETWORK:-}"
+PORT="${SHIP_PORT:-80}"
+TIMEOUT="${SHIP_TIMEOUT:-60}"
+
+run_args=(--env-file "$ENV_FILE")
+if [ -n "$NETWORK" ]; then
+  run_args+=(--network "$NETWORK")
+fi
+
+timestamp="$(date +%s)"
+new_web="${APP_NAME}-web-${timestamp}"
+new_worker="${APP_NAME}-worker-${timestamp}"
+
+docker run -d \
+  --name "$new_web" \
+  -e CONTAINER_ROLE=web \
+  -e SHIP_RUN_MIGRATIONS=true \
+  --restart unless-stopped \
+  -p "${PORT}:8080" \
+  "${run_args[@]}" \
+  "$IMAGE"
+
+echo "Waiting for web container..."
+deadline=$(( $(date +%s) + TIMEOUT ))
+while [ "$(date +%s)" -lt "$deadline" ]; do
+  running="$(docker inspect -f '{{.State.Running}}' "$new_web" 2>/dev/null || true)"
+  health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$new_web" 2>/dev/null || true)"
+  if [ "$running" = "true" ] && { [ "$health" = "none" ] || [ "$health" = "healthy" ]; }; then
+    break
+  fi
+  sleep 1
+done
+
+health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$new_web")"
+if [ "$(docker inspect -f '{{.State.Running}}' "$new_web")" != "true" ] || {
+  [ "$health" != "none" ] && [ "$health" != "healthy" ]
+}; then
+  docker logs "$new_web" >&2 || true
+  docker rm -f "$new_web" >/dev/null
+  exit 1
+fi
+
+docker rm -f "${APP_NAME}-web" 2>/dev/null || true
+docker rename "$new_web" "${APP_NAME}-web"
+
+docker run -d \
+  --name "$new_worker" \
+  -e CONTAINER_ROLE=worker \
+  -e SHIP_RUN_MIGRATIONS=false \
+  --restart unless-stopped \
+  "${run_args[@]}" \
+  "$IMAGE"
+
+echo "Waiting for worker container..."
+deadline=$(( $(date +%s) + TIMEOUT ))
+while [ "$(date +%s)" -lt "$deadline" ]; do
+  running="$(docker inspect -f '{{.State.Running}}' "$new_worker" 2>/dev/null || true)"
+  health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$new_worker" 2>/dev/null || true)"
+  if [ "$running" = "true" ] && { [ "$health" = "none" ] || [ "$health" = "healthy" ]; }; then
+    break
+  fi
+  sleep 1
+done
+
+health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$new_worker")"
+if [ "$(docker inspect -f '{{.State.Running}}' "$new_worker")" != "true" ] || {
+  [ "$health" != "none" ] && [ "$health" != "healthy" ]
+}; then
+  docker logs "$new_worker" >&2 || true
+  docker rm -f "$new_worker" >/dev/null
+  exit 1
+fi
+
+docker rm -f "${APP_NAME}-worker" 2>/dev/null || true
+docker rename "$new_worker" "${APP_NAME}-worker"
+
+echo "Deploy complete: ${APP_NAME}-web and ${APP_NAME}-worker"

@@ -148,13 +148,13 @@ function getGitHubApiEndpoint(string $endpoint): ?stdClass
         curl_setopt_array($curl, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_HTTPHEADER => [
+            CURLOPT_HTTPGET        => true,
+            CURLOPT_HTTPHEADER     => [
                 'User-Agent: spatie-configure-script/1.0',
             ],
         ]);
 
-        $response = curl_exec($curl);
+        $response   = curl_exec($curl);
         $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
         curl_close($curl);
@@ -173,15 +173,15 @@ function searchCommitsForGitHubUsername(): string
 {
     $authorName = strtolower(trim(shell_exec('git config user.name')));
 
-    $committersRaw = shell_exec("git log --author='@users.noreply.github.com' --pretty='%an:%ae' --reverse");
+    $committersRaw   = shell_exec("git log --author='@users.noreply.github.com' --pretty='%an:%ae' --reverse");
     $committersLines = explode("\n", $committersRaw ?? '');
-    $committers = array_filter(array_map(function ($line) use ($authorName) {
-        $line = trim($line);
+    $committers      = array_filter(array_map(function ($line) use ($authorName) {
+        $line           = trim($line);
         [$name, $email] = explode(':', $line) + [null, null];
 
         return [
-            'name' => $name,
-            'email' => $email,
+            'name'    => $name,
+            'email'   => $email,
             'isMatch' => strtolower($name) === $authorName && ! str_contains($name, '[bot]'),
         ];
     }, $committersLines), fn ($item) => $item['isMatch']);
@@ -221,7 +221,7 @@ function guessGitHubUsername(): string
     }
 
     // fall back to using the username from the git remote
-    $remoteUrl = shell_exec('git config remote.origin.url') ?? '';
+    $remoteUrl      = shell_exec('git config remote.origin.url') ?? '';
     $remoteUrlParts = explode('/', str_replace(':', '/', trim($remoteUrl)));
 
     return $remoteUrlParts[1] ?? '';
@@ -229,7 +229,7 @@ function guessGitHubUsername(): string
 
 function guessGitHubVendorInfo($authorName, $username): array
 {
-    $remoteUrl = shell_exec('git config remote.origin.url') ?? '';
+    $remoteUrl      = shell_exec('git config remote.origin.url') ?? '';
     $remoteUrlParts = explode('/', str_replace(':', '/', trim($remoteUrl)));
 
     if (! isset($remoteUrlParts[1])) {
@@ -245,38 +245,38 @@ function guessGitHubVendorInfo($authorName, $username): array
     return [$response->name ?? $authorName, $response->login ?? $username];
 }
 
-$gitName = run('git config user.name');
+$gitName    = run('git config user.name');
 $authorName = ask('Author name', $gitName);
 
-$gitEmail = run('git config user.email');
-$authorEmail = ask('Author email', $gitEmail);
+$gitEmail       = run('git config user.email');
+$authorEmail    = ask('Author email', $gitEmail);
 $authorUsername = ask('Author username', guessGitHubUsername());
 
 $guessGitHubVendorInfo = guessGitHubVendorInfo($authorName, $authorUsername);
 
-$vendorName = ask('Vendor name', $guessGitHubVendorInfo[0]);
+$vendorName     = ask('Vendor name', $guessGitHubVendorInfo[0]);
 $vendorUsername = ask('Vendor username', $guessGitHubVendorInfo[1] ?? slugify($vendorName));
-$vendorSlug = slugify($vendorUsername);
+$vendorSlug     = slugify($vendorUsername);
 
 $vendorNamespace = str_replace('-', '', ucwords($vendorName));
 $vendorNamespace = ask('Vendor namespace', $vendorNamespace);
 
 $currentDirectory = getcwd();
-$folderName = basename($currentDirectory);
+$folderName       = basename($currentDirectory);
 
-$packageName = ask('Package name', $folderName);
-$packageSlug = slugify($packageName);
+$packageName              = ask('Package name', $folderName);
+$packageSlug              = slugify($packageName);
 $packageSlugWithoutPrefix = remove_prefix('laravel-', $packageSlug);
 
-$className = title_case($packageName);
-$className = ask('Class name', $className);
+$className    = title_case($packageName);
+$className    = ask('Class name', $className);
 $variableName = lcfirst($className);
-$description = ask('Package description', "This is my package {$packageSlug}");
+$description  = ask('Package description', "This is my package {$packageSlug}");
 
-$usePhpStan = confirm('Enable PhpStan?', true);
-$useLaravelPint = confirm('Enable Laravel Pint?', true);
-$useDependabot = confirm('Enable Dependabot?', true);
-$useLaravelRay = confirm('Use Ray for debugging?', true);
+$usePhpStan                 = confirm('Enable PhpStan?', true);
+$useLaravelPint             = confirm('Enable Laravel Pint?', true);
+$useDependabot              = confirm('Enable Dependabot?', true);
+$useLaravelRay              = confirm('Use Ray for debugging?', true);
 $useUpdateChangelogWorkflow = confirm('Use automatic changelog updater workflow?', true);
 
 writeln('------');
@@ -304,31 +304,31 @@ $files = (str_starts_with(strtoupper(PHP_OS), 'WIN') ? replaceForWindows() : rep
 
 foreach ($files as $file) {
     replace_in_file($file, [
-        ':author_name' => $authorName,
-        ':author_username' => $authorUsername,
-        'author@domain.com' => $authorEmail,
-        ':vendor_name' => $vendorName,
-        'dmdboi' => $vendorSlug,
-        'VendorName' => $vendorNamespace,
-        'ship' => $packageName,
-        ':package_slug' => $packageSlug,
+        ':author_name'                 => $authorName,
+        ':author_username'             => $authorUsername,
+        'author@domain.com'            => $authorEmail,
+        ':vendor_name'                 => $vendorName,
+        'dmdboi'                       => $vendorSlug,
+        'VendorName'                   => $vendorNamespace,
+        'ship'                         => $packageName,
+        ':package_slug'                => $packageSlug,
         ':package_slug_without_prefix' => $packageSlugWithoutPrefix,
-        'Skeleton' => $className,
-        'skeleton' => $packageSlug,
-        'migration_table_name' => title_snake($packageSlug),
-        'variable' => $variableName,
-        ':package_description' => $description,
+        'Skeleton'                     => $className,
+        'skeleton'                     => $packageSlug,
+        'migration_table_name'         => title_snake($packageSlug),
+        'variable'                     => $variableName,
+        ':package_description'         => $description,
     ]);
 
     match (true) {
-        str_contains($file, determineSeparator('src/Skeleton.php')) => rename($file, determineSeparator('./src/'.$className.'.php')),
-        str_contains($file, determineSeparator('src/SkeletonServiceProvider.php')) => rename($file, determineSeparator('./src/'.$className.'ServiceProvider.php')),
-        str_contains($file, determineSeparator('src/Facades/Skeleton.php')) => rename($file, determineSeparator('./src/Facades/'.$className.'.php')),
-        str_contains($file, determineSeparator('src/Commands/SkeletonCommand.php')) => rename($file, determineSeparator('./src/Commands/'.$className.'Command.php')),
+        str_contains($file, determineSeparator('src/Skeleton.php'))                                   => rename($file, determineSeparator('./src/'.$className.'.php')),
+        str_contains($file, determineSeparator('src/SkeletonServiceProvider.php'))                    => rename($file, determineSeparator('./src/'.$className.'ServiceProvider.php')),
+        str_contains($file, determineSeparator('src/Facades/Skeleton.php'))                           => rename($file, determineSeparator('./src/Facades/'.$className.'.php')),
+        str_contains($file, determineSeparator('src/Commands/SkeletonCommand.php'))                   => rename($file, determineSeparator('./src/Commands/'.$className.'Command.php')),
         str_contains($file, determineSeparator('database/migrations/create_skeleton_table.php.stub')) => rename($file, determineSeparator('./database/migrations/create_'.title_snake($packageSlugWithoutPrefix).'_table.php.stub')),
-        str_contains($file, determineSeparator('config/skeleton.php')) => rename($file, determineSeparator('./config/'.$packageSlugWithoutPrefix.'.php')),
-        str_contains($file, 'README.md') => remove_readme_paragraphs($file),
-        default => [],
+        str_contains($file, determineSeparator('config/skeleton.php'))                                => rename($file, determineSeparator('./config/'.$packageSlugWithoutPrefix.'.php')),
+        str_contains($file, 'README.md')                                                              => remove_readme_paragraphs($file),
+        default                                                                                       => [],
     };
 }
 

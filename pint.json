@@ -1,0 +1,18 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "public",
+        "storage",
+        "database/schema",
+        "database/migrations"
+    ],
+    "rules": {
+        "binary_operator_spaces": {
+            "default": "single_space",
+            "operators": {
+                "=>": "align_single_space",
+                "=": "align_single_space"
+            }
+        }
+    }
+}
